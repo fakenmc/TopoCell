@@ -324,21 +324,25 @@ for i=1:numSubs
                         dataOut(i).cells(idx).particles(idxOut) = dataIn(i).cells(idx).particles(index);
                     end;
                 end;
-                % Create table with particle rating (only for particles to be filtered)
-                ratings = filterHandler(dataIn(i).cells(idx), toFilterIndexes, allParams); 
-                % Add particle indexes to ratings table
-                ratings(:, 2) = toFilterIndexes;
-                % Sort ratings table according to rating
-                ratings = sortrows(ratings, orderCol);
-                % How many particles correspond to the given percentile
-                numParticlesToSelect = floor(refParam * numel(ratings(:, 1)));
-                % Get indexes of particles within the given percentile
-                indexes = ratings(1:numParticlesToSelect, 2);
-                % Add selected particles to dataout
-                for index=1:numParticlesToSelect
-                    % Include particle
-                    idxOut = numel(dataOut(i).cells(idx).particles) + 1;
-                    dataOut(i).cells(idx).particles(idxOut) = dataIn(i).cells(idx).particles(indexes(index));
+                % Check if there are particles to rate, if so rate them and
+                % possibly add them to data out
+                if ~isempty(toFilterIndexes)
+                    % Create table with particle rating (only for particles to be filtered)
+                    ratings = filterHandler(dataIn(i).cells(idx), toFilterIndexes, allParams); 
+                    % Add particle indexes to ratings table
+                    ratings(:, 2) = toFilterIndexes;
+                    % Sort ratings table according to rating
+                    ratings = sortrows(ratings, orderCol);
+                    % How many particles correspond to the given percentile
+                    numParticlesToSelect = floor(refParam * numel(ratings(:, 1)));
+                    % Get indexes of particles within the given percentile
+                    indexes = ratings(1:numParticlesToSelect, 2);
+                    % Add selected particles to dataout
+                    for index=1:numParticlesToSelect
+                        % Include particle
+                        idxOut = numel(dataOut(i).cells(idx).particles) + 1;
+                        dataOut(i).cells(idx).particles(idxOut) = dataIn(i).cells(idx).particles(indexes(index));
+                    end;
                 end;
             elseif (strcmp(selectType, 'po'))
                 % Select particles by percentile applied to original data
@@ -376,26 +380,30 @@ for i=1:numSubs
                         end;
                     end;
                 end;
-                % Create table with particle rating (only for particles to
-                % be filtered)
-                ratings = filterHandler(dataInOrig(i).cells(origDataCellIndex), toFilterIndexes, allParams); 
-                % Add particle index to ratings table
-                ratings(:, 2) = toFilterIndexes;
-                % Sort ratings table according to rating
-                ratings = sortrows(ratings, orderCol);
-                % How many particles correspond to the given percentile
-                numParticlesToSelect = floor(refParam * numel(ratings(:, 1)));
-                % Get indexes of particles within the given percentile
-                indexes = ratings(1:numParticlesToSelect, 2);
-                % Add selected particles to dataout IF they exist in the filtered data
-                for index=1:numParticlesToSelect
-                    % Get particle ID
-                    particleID = dataInOrig(i).cells(origDataCellIndex).particles(indexes(index)).id;
-                    % Check if particle ID exists in filtered data
-                    if ~isempty(find(particleIDs == particleID))
-                        % Yep, include particle
-                        idxOut = numel(dataOut(i).cells(idx).particles) + 1;
-                        dataOut(i).cells(idx).particles(idxOut) = dataInOrig(i).cells(origDataCellIndex).particles(indexes(index));
+                % Check if there are particles to rate, if so rate them and
+                % possibly add them to data out
+                if ~isempty(toFilterIndexes)
+                    % Create table with particle rating (only for particles to
+                    % be filtered)
+                    ratings = filterHandler(dataInOrig(i).cells(origDataCellIndex), toFilterIndexes, allParams); 
+                    % Add particle index to ratings table
+                    ratings(:, 2) = toFilterIndexes;
+                    % Sort ratings table according to rating
+                    ratings = sortrows(ratings, orderCol);
+                    % How many particles correspond to the given percentile
+                    numParticlesToSelect = floor(refParam * numel(ratings(:, 1)));
+                    % Get indexes of particles within the given percentile
+                    indexes = ratings(1:numParticlesToSelect, 2);
+                    % Add selected particles to dataout IF they exist in the filtered data
+                    for index=1:numParticlesToSelect
+                        % Get particle ID
+                        particleID = dataInOrig(i).cells(origDataCellIndex).particles(indexes(index)).id;
+                        % Check if particle ID exists in filtered data
+                        if ~isempty(find(particleIDs == particleID))
+                            % Yep, include particle
+                            idxOut = numel(dataOut(i).cells(idx).particles) + 1;
+                            dataOut(i).cells(idx).particles(idxOut) = dataInOrig(i).cells(origDataCellIndex).particles(indexes(index));
+                        end;
                     end;
                 end;
             end;
