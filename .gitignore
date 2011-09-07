@@ -1,3 +1,4 @@
 *.ods
 *~
-testdata/
+.~*#
+testdata/result/*
