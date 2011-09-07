@@ -18,22 +18,24 @@ for idx=1:numParticleTypes
         break;
     end;
 end;
-if (particleIndex == -1)
-    error(['Error in "' params.hvName '" hyper-variable, particle_density function: Unknown particle type "' params.specificParams.particleType '"']);
-end;
 
-% Rate cells according to specified particle density
-if (params.specificParams.intensDep)
-    % Take intensity into account
-    for idx=1:numCells
-        rating(idx) = (dataIn.cells(idx).P_totint(particleIndex) ...
-            / maxIntens) / dataIn.cells(idx).vol;
+% Cycle through all the cells
+for idx=1:numCells
+    % Get particle intensity...
+    if (particleIndex > 0)
+        % ...if specified particle exists in cell
+        intensity = dataIn.cells(idx).P_totint(particleIndex);
+    else
+        % ...otherwise, intensity is zero
+        intensity = 0;
     end;
-else
-    % Don't take intensity into account
-    for idx=1:numCells
-        rating(idx) = dataIn.cells(idx).P_vol(particleIndex) ...
-            / dataIn.cells(idx).vol;
+    % Take intensity into account?
+    if (params.specificParams.intensDep)
+        % Yep, take intensity into account!
+        rating(idx) = (intensity / maxIntens) / dataIn.cells(idx).vol;
+    else
+        % Nop, don't take intensity into account
+        rating(idx) = intensity / dataIn.cells(idx).vol;
     end;
 end;
 

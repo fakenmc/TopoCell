@@ -1,11 +1,11 @@
-cell particle_density    tf 0.0001 gt  A     1
-cell particle_density    pf 0.99   sup B     0
-cell volume              to 10     gt  A,B   -
-cell volume              po 0.99   inf A     -   
-particle volume          tf 15     gt  B     -
-particle dist_membrane   pf 0.95   sup A,B,C D
-particle spher           tf 0.001  gt  C     F
-particle dist_particles  to 0.1    lt  A,B   -
+cell particle_density    pf 0.4 inf  D     1
+%cell particle_density    pf 0.99   sup B     0
+%cell volume              to 10     gt  A,B   -
+%cell volume              po 0.99   inf A     -   
+%particle volume          tf 15     gt  A,B     C
+%particle dist_membrane   pf 0.95   sup A,B,C D
+%particle spher           tf 0.001  gt  C     F
+%particle dist_particles  to 0.1    lt  A,B   -
 
 
 
