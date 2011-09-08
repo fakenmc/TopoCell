@@ -78,7 +78,7 @@ end;
 
 % Parse remaining specific filter function parameters if specific parser exists
 filterParamsHandlerStr = ['filter_' target '.' filterName '_params'];
-if exist(['+filter_' target filesep filterName '_params']) == 2 
+if exist(['+filter_' target filesep filterName '_params.m']) == 2 
     filterParamsHandler = str2func(filterParamsHandlerStr);    
     params = filterParamsHandler(args);
 else
