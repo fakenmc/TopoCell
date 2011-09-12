@@ -24,18 +24,20 @@ for idx=1:numCells
     % Get particle intensity...
     if (particleIndex > 0)
         % ...if specified particle exists in cell
-        intensity = dataIn.cells(idx).P_totint(particleIndex);
+        particlesVol = dataIn.cells(idx).P_vol(particleIndex);
+        particlesTotInt = dataIn.cells(idx).P_totint(particleIndex);
     else
-        % ...otherwise, intensity is zero
-        intensity = 0;
+        % ...otherwise, its volume is zero
+        particlesVol = 0;
+        particlesTotInt = 0;
     end;
     % Take intensity into account?
     if (params.specificParams.intensDep)
         % Yep, take intensity into account!
-        rating(idx) = (intensity / maxIntens) / dataIn.cells(idx).vol;
+        rating(idx) = (particlesTotInt / maxIntens) / dataIn.cells(idx).vol;
     else
         % Nop, don't take intensity into account
-        rating(idx) = intensity / dataIn.cells(idx).vol;
+        rating(idx) = particlesVol / dataIn.cells(idx).vol;
     end;
 end;
 
