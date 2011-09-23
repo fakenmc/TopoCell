@@ -1,0 +1,12 @@
+cell particle_density    tf 0.517  gt   A      1
+cell particle_density    pf 0.99   sup  B      0
+cell volume              to 4      gt 
+cell volume              po 0.99   inf    
+particle spher           pf 0.8    sup  C      -
+particle volume          po 0.9    sup  A,F,Z  B,C,D,E
+particle dist_membrane   pf 0.75   sup  A,B,C  D
+particle spher           pf 0.91   inf  D      F,C
+
+
+
+

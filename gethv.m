@@ -232,7 +232,7 @@ for i = 1:numHVs
         );
     end;
     % Keep hypervariable in vector
-    hv{i} = subsDataHV;
+    hv{i} = struct('name', hvDefs(i).name, 'data', subsDataHV);
 end;
 
 %%%%%%%%%%%%%%%%
@@ -253,8 +253,8 @@ for i=1:numHVs
     % Go through each subject and save it
     numSubjects = size(hv{1}, 2);
     for idx=1:numSubjects
-        filename = [resultFolder filesep hvDefs(i).name filesep hv{i}(idx).subject '.mat'];
-        currentSubject = hv{i}(idx);
+        filename = [resultFolder filesep hvDefs(i).name filesep hv{i}.data(idx).subject '.mat'];
+        currentSubject = hv{i}.data(idx);
         save(filename, 'currentSubject');
     end;
 end;
