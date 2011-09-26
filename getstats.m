@@ -6,7 +6,7 @@
 %%%%%% Parameters %%%%%%%
 %
 % hvs - hypervariables; if a string is given, its considered a filename
-% and the hypervariables are loaded from that file; otherwise, hvs is 
+% and the hypervariables are loaded from that file; otherwise, hvs is
 % directly considered the hypervariables.
 % tostat - filename of file containing sv's and respective stats to obtain
 %
@@ -66,10 +66,22 @@ while true
     if ~numel(hvname), break, end;
     % Get sv holder
     [svholder, remain] = strtok(remain);
+    if ~strcmp(svholder, 'cell') && ~strcmp(svholder, 'particle')
+        % Invalid container/holder
+        error(['Invalid supervariable container "' svholder '". Must be "cell" or "particle".']);
+    end;
     % Get sv name
     [svname, remain] = strtok(remain);
     % Get depth
     [depth, remain] = strtok(remain);
+    if strcmp(depth, 'particle') && strcmp(svholder, 'cell')
+        % Invalid depth to given holder
+        error('Invalid depth "particle" to given holder "cell"');
+    end;
+    if ~strcmp(depth, 'particle') && ~strcmp(depth, 'cell') && ~strcmp(depth, 'subject') && ~strcmp(depth, 'group')
+        % Invalid depth
+        error(['Invalid depth "' depth '". Depth should be "particle", "cell", "subject" or "group."']);
+    end;
     % Get sources
     sources = {};
     while true
@@ -89,8 +101,10 @@ while true
 end;
 % Close file
 fclose(fileId);
-stats = statDefs;
-return;
+
+%stats = statDefs;
+%return;
+
 % Get supervariables and adjust them to given depth (particle, cell,
 % subject or group)
 numSVs = idx;
@@ -101,19 +115,21 @@ for i=1:numSVs
     hvFound = 0;
     for idx=1:numHVs
         if strcmp(hvs{idx}.name, statDefs(i).hvname)
-           hvFound = 1;
-           break;
+            hvFound = 1;
+            break;
         end;
     end;
     if ~hvFound
         error(['Hypervariable "' statDefs(i).hvname '" not found!']);
     end;
     hvIndex = idx;
-    %%% Gather supervariables
+    %%% Gather supervariable
     numSources = numel(statDefs(i).sources);
-    rawSV = struct('group', {}, 'subjects', {});
+    rawSV = {};
+    groups = {};
     for idx=1:numSources
         [context, ctxValue] = strtok(statDefs(i).sources(idx), ':');
+        ctxValue = strtok(ctxValue, ':');
         % Check if source context is group or subject
         if ~strcmp(context, 'g') && ~strcmp(context, 's')
             error(['Invalid context in source "' statDefs(i).sources(idx) '". Must be "g" (group) or "s" (subject).']);
@@ -122,23 +138,89 @@ for i=1:numSVs
         totalSubs = numel(hvs{hvIndex}.data);
         for subIndex=1:totalSubs
             if (strcmp(context, 'g') && strcmp(ctxValue, hvs{hvIndex}.data(subIndex).group)) ...
-                || ...
-               (strcmp(context, 's') && strcmp(ctxValue, hvs{hvIndex}.data(subIndex).subject))
-               % Subject match (either by group or subject name), gather
-               % supervariable
-               if strcmp(statDefs(i).svholder, 'cell')
-                   % It's a cell supervariable
-                   
-               elseif strcmp(statDefs(i).svholder, 'particle')
-                   % It's a particle supervariable
-                    
-               else
-                   % Invalid container/holder
-                   error(['Invalid supervariable container "' statDefs(i).svholder '". Must be "cell" or "particle".']);
-               end;
+                    || ...
+                    (strcmp(context, 's') && strcmp(ctxValue, hvs{hvIndex}.data(subIndex).subject))
+                % Subject match (either by group or subject name), gather
+                % supervariable
+                svIndex = numel(rawSV) + 1;
+                if strcmp(statDefs(i).svholder, 'cell')
+                    % It's a cell supervariable
+                    rawSV{svIndex} = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' statDefs(i).svname '}']));
+                else
+                    % It's a particle supervariable
+                    numCells = numel(hvs{hvIndex}.data(subIndex).cells);
+                    cells = {};
+                    for cellIndex=1:numCells
+                        cells{cellIndex} = ...
+                            cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells(cellIndex).particles.' statDefs(i).svname '}']));
+                    end;
+                    rawSV{svIndex} = cells;
+                end;
+                % Keep group info for current subject
+                groups{numel(groups) + 1} = hvs{hvIndex}.data(subIndex).group;
             end;
         end;
     end;
-    %%% Adjust them to given depth
-    
+    %%% Adjust supervariable to given depth and get statistics
+    sizeSV = numel(rawSV);
+    svVector = [];
+    if strcmp(statDefs(i).depth, 'particle')
+        % particle depth
+        for idx=1:sizeSV
+            numCells = numel(rawSV{idx});
+            for index=1:numCells
+                svVector = [svVector rawSV{idx}{index}];
+            end;
+        end;
+    elseif strcmp(statDefs(i).depth, 'cell')
+        % cell depth
+        for idx=1:sizeSV
+            if strcmp(statDefs(i).svholder, 'particle')
+                % Particle holder, get means
+                numCells = numel(rawSV{idx});
+                for index=1:numCells
+                    svVector = [svVector mean(rawSV{idx}{index})];
+                end;
+            else
+                % Cell holder, direct
+                svVector = [svVector rawSV{idx}];
+            end;
+        end;
+    elseif strcmp(statDefs(i).depth, 'subject')
+        % Subject depth
+        for idx=1:sizeSV
+            auxVector = [];
+            if strcmp(statDefs(i).svholder, 'particle')
+                % Particle holder, get means
+                numCells = numel(rawSV{idx});
+                for index=1:numCells
+                    auxVector = [auxVector rawSV{idx}{index}];
+                end;
+            else
+                % Cell holder, direct
+                auxVector = rawSV{idx};
+            end;
+            svVector = [svVector mean(auxVector)];
+        end;
+    elseif strcmp(statDefs(i).depth, 'group')
+        % Group depth
+        subsVector = [];
+        for idx=1:sizeSV
+            auxVector = [];
+            if strcmp(statDefs(i).svholder, 'particle')
+                % Particle holder, get means
+                numCells = numel(rawSV{idx});
+                for index=1:numCells
+                    auxVector = [auxVector rawSV{idx}{index}];
+                end;
+            else
+                % Cell holder, direct
+                auxVector = rawSV{idx};
+            end;
+            subsVector = [subsVector mean(auxVector)];
+        end;
+        % TODO This
+    end;
+    stats{i} = struct('data', svVector, 'mean', mean(svVector));
 end;
+
