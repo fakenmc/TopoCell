@@ -102,9 +102,6 @@ end;
 % Close file
 fclose(fileId);
 
-%stats = statDefs;
-%return;
-
 % Get supervariables and adjust them to given depth (particle, cell,
 % subject or group)
 numSVs = idx;
@@ -179,7 +176,10 @@ for i=1:numSVs
                 % Particle holder, get means
                 numCells = numel(rawSV{idx});
                 for index=1:numCells
-                    svVector = [svVector mean(rawSV{idx}{index})];
+                    newMean = mean(rawSV{idx}{index});
+                    if ~isnan(newMean)
+                        svVector = [svVector newMean];
+                    end;
                 end;
             else
                 % Cell holder, direct
@@ -194,13 +194,19 @@ for i=1:numSVs
                 % Particle holder, get means
                 numCells = numel(rawSV{idx});
                 for index=1:numCells
-                    auxVector = [auxVector rawSV{idx}{index}];
+                    vectorToAdd = rawSV{idx}{index};
+                    if numel(vectorToAdd)
+                        auxVector = [auxVector vectorToAdd];
+                    end;
                 end;
             else
                 % Cell holder, direct
                 auxVector = rawSV{idx};
             end;
-            svVector = [svVector mean(auxVector)];
+            newMean = mean(auxVector);
+            if ~isnan(newMean)
+                svVector = [svVector newMean];
+            end;
         end;
     elseif strcmp(statDefs(i).depth, 'group')
         % Group depth
@@ -211,16 +217,41 @@ for i=1:numSVs
                 % Particle holder, get means
                 numCells = numel(rawSV{idx});
                 for index=1:numCells
-                    auxVector = [auxVector rawSV{idx}{index}];
+                    vectorToAdd = rawSV{idx}{index};
+                    if numel(vectorToAdd)
+                        auxVector = [auxVector vectorToAdd];
+                    end;
                 end;
             else
                 % Cell holder, direct
                 auxVector = rawSV{idx};
             end;
-            subsVector = [subsVector mean(auxVector)];
+            newMean = mean(auxVector);
+            if ~isnan(newMean)
+                subsVector = [subsVector mean(auxVector)];
+            end;
         end;
         % TODO This
+        error('"group"-wise statistics are not yet implemented... sorry!');
     end;
-    stats{i} = struct('data', svVector, 'mean', mean(svVector));
+    stats{i} = struct( ...
+        'data', svVector, ...
+        'numel', numel(svVector), ...
+        'mean', mean(svVector), ...
+        'median', median(svVector), ...
+        'std', std(svVector, 1), ...
+        'var', var(svVector, 1) ...
+    );
 end;
+
+fprintf('-----------------------------------------------------------------\n');
+fprintf('|  Id  |    n   |    Mean   |   Median  | St. dev.  | Variance  |\n');
+        %|    1 |      2 | 5.715e+04 | 5.715e+04 | 2.415e+04 | 5.833e+08 |
+fprintf('-----------------------------------------------------------------\n');
+for i=1:numSVs
+    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e |\n', i, stats{i}.numel, stats{i}.mean, stats{i}.median, stats{i}.std, stats{i}.var);
+end;
+fprintf('-----------------------------------------------------------------\n');
+
+
 

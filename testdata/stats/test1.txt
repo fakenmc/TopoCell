@@ -1,2 +1,3 @@
 testhv cell vol subject g:obese s:S0001
 testhv particle spher cell s:S0008 s:S0001
+testhv particle vol particle s:S0008
