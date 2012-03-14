@@ -240,18 +240,19 @@ for i=1:numSVs
         'mean', mean(svVector), ...
         'median', median(svVector), ...
         'std', std(svVector, 1), ...
-        'var', var(svVector, 1) ...
+        'var', var(svVector, 1), ...
+        'stderr', std(svVector, 1) / sqrt(numel(svVector)) ...
     );
 end;
 
-fprintf('-----------------------------------------------------------------\n');
-fprintf('|  Id  |    n   |    Mean   |   Median  | St. dev.  | Variance  |\n');
-        %|    1 |      2 | 5.715e+04 | 5.715e+04 | 2.415e+04 | 5.833e+08 |
-fprintf('-----------------------------------------------------------------\n');
+fprintf('-----------------------------------------------------------------------------\n');
+fprintf('|  Id  |    n   |    Mean   |   Median  | St. dev.  | Variance  | St. err.  |\n');
+        %|    1 |      2 | 5.715e+04 | 5.715e+04 | 2.415e+04 | 5.833e+08 | 4.344e+02
+fprintf('-----------------------------------------------------------------------------\n');
 for i=1:numSVs
-    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e |\n', i, stats{i}.numel, stats{i}.mean, stats{i}.median, stats{i}.std, stats{i}.var);
+    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e | %1.3e |\n', i, stats{i}.numel, stats{i}.mean, stats{i}.median, stats{i}.std, stats{i}.var, stats{i}.stderr);
 end;
-fprintf('-----------------------------------------------------------------\n');
+fprintf('-----------------------------------------------------------------------------\n');
 
 
 
