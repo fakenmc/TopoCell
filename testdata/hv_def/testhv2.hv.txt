@@ -1,4 +1,6 @@
-particle volume          tf  0.01    gt  A,B  C,D
+particle volume          tf  0.01    gt   A,B   C,D
+particle dist_membrane   pf  0.75    sup  A,B,C D   0
+
 
 
 

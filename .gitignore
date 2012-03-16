@@ -1,6 +1,6 @@
 *.ods
 *~
 .~*#
-testdata/result/*
+testdata/result*
 .nfs*
 docs/

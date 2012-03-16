@@ -7,6 +7,7 @@
 %%%%%% Parameters %%%%%%%
 %
 % bits - Number of bits per channel in image
+% dims - Number of dimensions to analyze (2 or 3)
 % tsvFolder - Contains cell/particle information files
 % hvFolder - Contains hv definitions files
 % resultFolder - Where the result files will be outputted
@@ -16,7 +17,7 @@
 % hv - Vector containing the requested hypervariables
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%
-function hv = gethv(bits, tsvFolder, hvFolder, resultFolder)
+function hv = gethv(bits, dims, tsvFolder, hvFolder, resultFolder)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open TSV folder and load cell information %
@@ -224,6 +225,7 @@ for i = 1:numHVs
         % function 
         subsDataHV = filter_target( ...
             bits, ...          % Number of intensity bits
+            dims, ...          % Number of dimensions (2 or 3)
             subsDataHV, ...    % Filtered data
             subsData, ...      % Original data
             target, ...        % Cell or particle
