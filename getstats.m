@@ -142,7 +142,25 @@ for i=1:numSVs
                 svIndex = numel(rawSV) + 1;
                 if strcmp(statDefs(i).svholder, 'cell')
                     % It's a cell supervariable
-                    rawSV{svIndex} = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' statDefs(i).svname '}']));
+                    if strncmp(statDefs(i).svname, 'P_totint', 8) || strncmp(statDefs(i).svname, 'P_vol', 5)
+                        % Complex SV with sub-fields
+                        % Get the svname (without index)
+                        tmpSvName =  statDefs(i).svname(1:strfind(statDefs(i).svname, '(')-1);
+                        % Get index
+                        tmpSvNameIdx = str2double(statDefs(i).svname(strfind(statDefs(i).svname, '(')+1:strfind(statDefs(i).svname, ')')-1));
+                        % Determine number of particle types
+                        tmpRawSV = eval(['hvs{hvIndex}.data(subIndex).cells.' tmpSvName]);
+                        tmpRawSVSize = size(tmpRawSV, 2);
+                        % Get data and put it in matrix form
+                        tmpRawSV = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' tmpSvName '}']));
+                        tmpRawSV = vec2mat(tmpRawSV, tmpRawSVSize);
+                        % Get data for the specified particle type only
+                        rawSV{svIndex} = tmpRawSV(:, tmpSvNameIdx)';
+                        clear tmpRawSV;
+                    else
+                        % Simple SV
+                        rawSV{svIndex} = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' statDefs(i).svname '}']));
+                    end;
                 else
                     % It's a particle supervariable
                     numCells = numel(hvs{hvIndex}.data(subIndex).cells);

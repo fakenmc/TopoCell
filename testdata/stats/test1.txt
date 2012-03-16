@@ -1,6 +1,8 @@
+testhv cell P_totint(1) cell g:obese s:S0001
 testhv particle vol particle s:S0008
 testhv2 particle vol particle s:S0001 s:S0008
 testhv cell vol subject g:obese s:S0001
+testhv cell P_vol(2) cell g:obese
 testhv particle spher cell s:S0008 s:S0001
 testhv cell geoC_x cell g:obese s:S0001
 
