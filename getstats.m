@@ -252,6 +252,9 @@ for i=1:numSVs
         % TODO This
         error('"group"-wise statistics are not yet implemented... sorry!');
     end;
+    % Remove NaNs
+    svVector = svVector(~isnan(svVector));
+    % Create stats data structure
     stats{i} = struct( ...
         'data', svVector, ...
         'numel', numel(svVector), ...
