@@ -253,7 +253,7 @@ for i=1:numHVs
         mkdir([resultFolder filesep hvDefs(i).name]);
     end;
     % Go through each subject and save it
-    numSubjects = size(hv{1}, 2);
+    numSubjects = size(hv{1}.data, 2);
     for idx=1:numSubjects
         filename = [resultFolder filesep hvDefs(i).name filesep hv{i}.data(idx).subject '.mat'];
         currentSubject = hv{i}.data(idx);
