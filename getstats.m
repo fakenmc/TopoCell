@@ -140,38 +140,7 @@ for i=1:numSVs
                 % Subject match (either by group or subject name), gather
                 % supervariable
                 svIndex = numel(rawSV) + 1;
-                if strcmp(statDefs(i).svholder, 'cell')
-                    % It's a cell supervariable
-                    if strncmp(statDefs(i).svname, 'P_totint', 8) || strncmp(statDefs(i).svname, 'P_vol', 5)
-                        % Complex SV with sub-fields
-                        % Get the svname (without index)
-                        tmpSvName =  statDefs(i).svname(1:strfind(statDefs(i).svname, '(')-1);
-                        % Get index
-                        tmpSvNameIdx = statDefs(i).svname(strfind(statDefs(i).svname, '(')+1:strfind(statDefs(i).svname, ')')-1);
-                        % Determine number of particle types
-                        tmpRawSV = eval(['hvs{hvIndex}.data(subIndex).cells.' tmpSvName]);
-                        tmpRawSVSize = size(tmpRawSV, 2);
-                        % Get data and put it in matrix form
-                        tmpRawSV = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' tmpSvName '}']));
-                        tmpRawSV = vec2mat(tmpRawSV, tmpRawSVSize);
-                        % Get data for the specified particle types only
-                        tmpRawSV = eval(['tmpRawSV(:, ' tmpSvNameIdx ')']);
-                        rawSV{svIndex} = reshape(tmpRawSV, numel(tmpRawSV), 1);
-                        clear tmpRawSV;
-                    else
-                        % Simple SV
-                        rawSV{svIndex} = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' statDefs(i).svname '}']));
-                    end;
-                else
-                    % It's a particle supervariable
-                    numCells = numel(hvs{hvIndex}.data(subIndex).cells);
-                    cells = {};
-                    for cellIndex=1:numCells
-                        cells{cellIndex} = ...
-                            cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells(cellIndex).particles.' statDefs(i).svname '}']));
-                    end;
-                    rawSV{svIndex} = cells;
-                end;
+                rawSV{svIndex} = getRawSV(statDefs(i), hvs{hvIndex}.data(subIndex));
                 % Keep group info for current subject
                 groups{numel(groups) + 1} = hvs{hvIndex}.data(subIndex).group;
             end;
@@ -275,6 +244,40 @@ for i=1:numSVs
     fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e | %1.3e |\n', i, stats{i}.numel, stats{i}.mean, stats{i}.median, stats{i}.std, stats{i}.var, stats{i}.stderr);
 end;
 fprintf('-----------------------------------------------------------------------------\n');
+
+function rawSV = getRawSV(statDefs, hvs_data)
+
+if strcmp(statDefs.svholder, 'cell')
+    % It's a cell supervariable
+    if strncmp(statDefs.svname, 'P_totint', 8) || strncmp(statDefs.svname, 'P_vol', 5)
+        % Complex SV with sub-fields
+        % Get the svname (without index)
+        tmpSvName =  statDefs.svname(1:strfind(statDefs.svname, '(')-1);
+        % Get index
+        tmpSvNameIdx = statDefs.svname(strfind(statDefs.svname, '(')+1:strfind(statDefs.svname, ')')-1);
+        % Determine number of particle types
+        tmpRawSV = eval(['hvs_data.cells.' tmpSvName]);
+        tmpRawSVSize = size(tmpRawSV, 2);
+        % Get data and put it in matrix form
+        tmpRawSV = cell2mat(eval(['{hvs_data.cells.' tmpSvName '}']));
+        tmpRawSV = vec2mat(tmpRawSV, tmpRawSVSize);
+        % Get data for the specified particle types only
+        tmpRawSV = eval(['tmpRawSV(:, ' tmpSvNameIdx ')']);
+        rawSV = reshape(tmpRawSV, numel(tmpRawSV), 1);
+    else
+        % Simple SV
+        rawSV = cell2mat(eval(['{hvs_data.cells.' statDefs.svname '}']));
+    end;
+else
+    % It's a particle supervariable
+    numCells = numel(hvs_data.cells);
+    cells = {};
+    for cellIndex=1:numCells
+        cells{cellIndex} = ...
+            cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' statDefs.svname '}']));
+    end;
+    rawSV = cells;
+end;
 
 
 
