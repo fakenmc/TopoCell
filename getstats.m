@@ -147,15 +147,16 @@ for i=1:numSVs
                         % Get the svname (without index)
                         tmpSvName =  statDefs(i).svname(1:strfind(statDefs(i).svname, '(')-1);
                         % Get index
-                        tmpSvNameIdx = str2double(statDefs(i).svname(strfind(statDefs(i).svname, '(')+1:strfind(statDefs(i).svname, ')')-1));
+                        tmpSvNameIdx = statDefs(i).svname(strfind(statDefs(i).svname, '(')+1:strfind(statDefs(i).svname, ')')-1);
                         % Determine number of particle types
                         tmpRawSV = eval(['hvs{hvIndex}.data(subIndex).cells.' tmpSvName]);
                         tmpRawSVSize = size(tmpRawSV, 2);
                         % Get data and put it in matrix form
                         tmpRawSV = cell2mat(eval(['{hvs{hvIndex}.data(subIndex).cells.' tmpSvName '}']));
                         tmpRawSV = vec2mat(tmpRawSV, tmpRawSVSize);
-                        % Get data for the specified particle type only
-                        rawSV{svIndex} = tmpRawSV(:, tmpSvNameIdx)';
+                        % Get data for the specified particle types only
+                        tmpRawSV = eval(['tmpRawSV(:, ' tmpSvNameIdx ')']);
+                        rawSV{svIndex} = reshape(tmpRawSV, numel(tmpRawSV), 1);
                         clear tmpRawSV;
                     else
                         % Simple SV
