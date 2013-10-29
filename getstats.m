@@ -154,28 +154,10 @@ for i=1:numSVs
             if (strcmp(context, 'g') && strcmp(ctxValue, hvs{hvIndex}.data(subIndex).group)) ...
                     || ...
                     (strcmp(context, 's') && strcmp(ctxValue, hvs{hvIndex}.data(subIndex).subject))
-                
                 % Subject match (either by group or subject name), gather
                 % supervariable
-                
-                % Get index of current raw SV
                 svIndex = numel(rawSV) + 1;
-
-                % Check if it's a direct SV or an operations on SVs
-                svComponents = textscan(statDefs(i).svname, '%s', 'delimiter', '/');
-                svComponentsSize = size(svComponents{1}, 1);
-                if svComponentsSize==1
-                    % Regular SV
-                    rawSV{svIndex} = getRawSV(svComponents{1}{1}, statDefs(i).svholder, hvs{hvIndex}.data(subIndex));
-                elseif svComponentsSize==2
-                    % Operation on SVs, only division supported for now
-                    rawSV{svIndex} = getRawSV(svComponents{1}{1}, statDefs(i).svholder, hvs{hvIndex}.data(subIndex)) ...
-                                   / getRawSV(svComponents{1}{2}, statDefs(i).svholder, hvs{hvIndex}.data(subIndex));
-                else
-                    % Nothing else supported for now
-                    error('Only one division operation allowed on supervariables!');
-                end;
-                
+                rawSV{svIndex} = getRawSV(statDefs(i), hvs{hvIndex}.data(subIndex));
                 % Keep group info for current subject
                 groups{numel(groups) + 1} = hvs{hvIndex}.data(subIndex).group;
             end;
@@ -280,16 +262,16 @@ for i=1:numSVs
 end;
 fprintf('-----------------------------------------------------------------------------\n');
 
-function rawSV = getRawSV(svname, svholder, hvs_data)
+function rawSV = getRawSV(statDefs, hvs_data)
 
-if strcmp(svholder, 'cell')
+if strcmp(statDefs.svholder, 'cell')
     % It's a cell supervariable
-    if strncmp(svname, 'P_totint', 8) || strncmp(svname, 'P_vol', 5)
+    if strncmp(statDefs.svname, 'P_totint', 8) || strncmp(statDefs.svname, 'P_vol', 5)
         % Complex SV with sub-fields
         % Get the svname (without index)
-        tmpSvName =  svname(1:strfind(svname, '(')-1);
+        tmpSvName =  statDefs.svname(1:strfind(statDefs.svname, '(')-1);
         % Get index
-        tmpSvNameIdx = svname(strfind(svname, '(')+1:strfind(svname, ')')-1);
+        tmpSvNameIdx = statDefs.svname(strfind(statDefs.svname, '(')+1:strfind(statDefs.svname, ')')-1);
         % Determine number of particle types
         tmpRawSV = eval(['hvs_data.cells.' tmpSvName]);
         tmpRawSVSize = size(tmpRawSV, 2);
@@ -298,13 +280,10 @@ if strcmp(svholder, 'cell')
         tmpRawSV = vec2mat(tmpRawSV, tmpRawSVSize);
         % Get data for the specified particle types only
         tmpRawSV = eval(['tmpRawSV(:, ' tmpSvNameIdx ')']);
-        % Remove NaNs
-        tmpRawSV(isnan(tmpRawSV)) = 0;
-        % Sum data relative to the same cell
-        rawSV = sum(tmpRawSV, 2)';
+        rawSV = reshape(tmpRawSV, numel(tmpRawSV), 1);
     else
         % Simple SV
-        rawSV = cell2mat(eval(['{hvs_data.cells.' svname '}']));
+        rawSV = cell2mat(eval(['{hvs_data.cells.' statDefs.svname '}']));
     end;
 else
     % It's a particle supervariable
@@ -312,7 +291,7 @@ else
     cells = {};
     for cellIndex=1:numCells
         cells{cellIndex} = ...
-            cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' svname '}']));
+            cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' statDefs.svname '}']));
     end;
     rawSV = cells;
 end;
