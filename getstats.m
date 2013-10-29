@@ -157,7 +157,7 @@ for i=1:numSVs
                 % Subject match (either by group or subject name), gather
                 % supervariable
                 svIndex = numel(rawSV) + 1;
-                rawSV{svIndex} = getRawSV(statDefs(i), hvs{hvIndex}.data(subIndex));
+                rawSV{svIndex} = getRawSV(statDefs(i).svholder, statDefs(i).svname, hvs{hvIndex}.data(subIndex));
                 % Keep group info for current subject
                 groups{numel(groups) + 1} = hvs{hvIndex}.data(subIndex).group;
             end;
@@ -262,16 +262,18 @@ for i=1:numSVs
 end;
 fprintf('-----------------------------------------------------------------------------\n');
 
-function rawSV = getRawSV(statDefs, hvs_data)
+function rawSV = getRawSV(svholder, svname, hvs_data)
 
-if strcmp(statDefs.svholder, 'cell')
+% Check type of supervariable
+if strcmp(svholder, 'cell')
     % It's a cell supervariable
-    if strncmp(statDefs.svname, 'P_totint', 8) || strncmp(statDefs.svname, 'P_vol', 5)
-        % Complex SV with sub-fields
+    % Now check what type of cell supervariable it is
+    if strncmp(svname, 'P_totint', 8) || strncmp(svname, 'P_vol', 5)
+        % Its an existing particle aggregate SV with sub-fields
         % Get the svname (without index)
-        tmpSvName =  statDefs.svname(1:strfind(statDefs.svname, '(')-1);
+        tmpSvName =  svname(1:strfind(svname, '(')-1);
         % Get index
-        tmpSvNameIdx = statDefs.svname(strfind(statDefs.svname, '(')+1:strfind(statDefs.svname, ')')-1);
+        tmpSvNameIdx = svname(strfind(svname, '(')+1:strfind(svname, ')')-1);
         % Determine number of particle types
         tmpRawSV = eval(['hvs_data.cells.' tmpSvName]);
         tmpRawSVSize = size(tmpRawSV, 2);
@@ -281,9 +283,20 @@ if strcmp(statDefs.svholder, 'cell')
         % Get data for the specified particle types only
         tmpRawSV = eval(['tmpRawSV(:, ' tmpSvNameIdx ')']);
         rawSV = reshape(tmpRawSV, numel(tmpRawSV), 1);
+    elseif strncmp(svname, 'pop_', 4)
+        % Its a non-existing particle aggregate SV, we must perform
+        % aggregate op now.
+        % Determine op to perform and particle types
+        parts = textscan(svname, '%s', 'Delimiter', '_');
+        svnameAgg = parts{1}(2);
+        numParticles = size(parts{1}, 1);
+        tmpRawSV = [];
+        for i=3:numParticles
+            tmpRawSv = [tmpRawSV getRawSV('particle', svnameAgg(strfind(svname, '(')+1:strfind(svname, ')')-1), hvs_data)];      
+        end;
     else
         % Simple SV
-        rawSV = cell2mat(eval(['{hvs_data.cells.' statDefs.svname '}']));
+        rawSV = cell2mat(eval(['{hvs_data.cells.' svname '}']));
     end;
 else
     % It's a particle supervariable
@@ -291,7 +304,7 @@ else
     cells = {};
     for cellIndex=1:numCells
         cells{cellIndex} = ...
-            cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' statDefs.svname '}']));
+            cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' svname '}']));
     end;
     rawSV = cells;
 end;
