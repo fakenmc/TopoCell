@@ -157,7 +157,22 @@ for i=1:numSVs
                 % Subject match (either by group or subject name), gather
                 % supervariable
                 svIndex = numel(rawSV) + 1;
-                rawSV{svIndex} = getRawSV(statDefs(i).svholder, statDefs(i).svname, hvs{hvIndex}.data(subIndex));
+
+                % Check if it's a direct SV or an operations on SVs
+                svComponents = textscan(statDefs(i).svname, '%s', 'delimiter', '/');
+                svComponentsSize = size(svComponents{1}, 1);
+                if svComponentsSize==1
+                    % Regular SV
+                    rawSV{svIndex} = getRawSV(statDefs(i).svholder, svComponents{1}{1}, hvs{hvIndex}.data(subIndex));
+                elseif svComponentsSize==2
+                    % Operation on SVs, only division supported for now
+                    rawSV{svIndex} = getRawSV(statDefs(i).svholder, svComponents{1}{1}, hvs{hvIndex}.data(subIndex)) ...
+                                   ./ getRawSV(statDefs(i).svholder, svComponents{1}{2}, hvs{hvIndex}.data(subIndex));
+                else
+                    % Nothing else supported for now
+                    error('Only one division operation allowed on supervariables!');
+                end;
+
                 % Keep group info for current subject
                 groups{numel(groups) + 1} = hvs{hvIndex}.data(subIndex).group;
             end;
