@@ -285,15 +285,42 @@ if strcmp(svholder, 'cell')
         rawSV = reshape(tmpRawSV, numel(tmpRawSV), 1);
     elseif strncmp(svname, 'pop_', 4)
         % Its a non-existing particle aggregate SV, we must perform
-        % aggregate op now.
-        % Determine op to perform and particle types
-        parts = textscan(svname, '%s', 'Delimiter', '_');
-        svnameAgg = parts{1}(2);
-        numParticles = size(parts{1}, 1);
-        tmpRawSV = [];
-        for i=3:numParticles
-            tmpRawSv = [tmpRawSV getRawSV('particle', svnameAgg(strfind(svname, '(')+1:strfind(svname, ')')-1), hvs_data)];      
-        end;
+        % aggregate op now. svname is in the format pop_op(sv(a,b,c))
+        
+        parts = textscan(svname, '%s', 'Delimiter','(');
+        % Determine aggregate op to perform
+        aggOp = cell2mat(parts{1}(1));
+        aggOp = aggOp(5:size(aggOp,2));
+        % Determine SV on which to perform op
+        svrealname = cell2mat(parts{1}(2));
+        % Determine on which particle types to perform it
+        particleTypes = cell2mat(parts{1}(3));
+        particleTypes = particleTypes(1:size(particleTypes, 2) - 2);
+        particleTypes = textscan(particleTypes, '%s', 'Delimiter', ',');
+        particleTypes = cell2mat(particleTypes{1});
+        % Determine number of particle types
+        numParticleTypes = size(particleTypes, 1);
+        % Initialize a temporary raw SV
+        rawSV = [];
+        % Determine number of cells
+        numCells = numel(hvs_data.cells);
+        % For each cell get the respective particles supervariables,
+        % perform op and save result
+        for cellIndex=1:numCells
+            % Get all instances of the required particle supervariable
+            allPSVi = cell2mat(eval(['{hvs_data.cells(cellIndex).particles.' svrealname '}']));
+            % Get the respective particle types
+            allPTypes = cell2mat({hvs_data.cells(cellIndex).particles.type});
+            % Initialize gathering var to null
+            allCellPAggSVs = [];
+            % Cycle through acceptable particle types and gather respective
+            % sv instances.
+            for pt=1:numParticleTypes
+                allCellPAggSVs = [allCellPAggSVs allPSVi(find(allPTypes==particleTypes(pt)))];
+            end;
+            % Perform aggregate operation on gathered particle sv instances
+            rawSV = [rawSV eval([aggOp '(allCellPAggSVs)'])];
+        end;   
     else
         % Simple SV
         rawSV = cell2mat(eval(['{hvs_data.cells.' svname '}']));
