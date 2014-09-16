@@ -26,14 +26,8 @@ end;
 % Determine number of particles to filter
 numParticles = numel(toFilterIndexes);
 
-% Create rating matrix
-if params.orderCol == 1
-    % Smaller distances are privileged, so init everything to inf
-    rating = Inf * ones(numParticles, 1);
-else
-    % Larger distances are previleged, so init everything to zero
-    rating = zeros(numParticles, 1);
-end;
+% Init everything to inf, we'll keep the smaller distance between particles
+rating = Inf * ones(numParticles, 1);
 
 % Determine ratings
 for i=1:numParticles
@@ -70,26 +64,13 @@ for i=1:numParticles
                     );
                     pDist = pDist - iRadius - idxRadius;
                 end;
-                
-                
-                % Check if distance is smaller or bigger than currently
-                % set distance
-                if params.orderCol == 1
-                    % Privilege smaller distances
-                    if pDist < rating(i)
-                        rating(i) = pDist;
-                    end;
-                    if pDist < rating(idx)
-                        rating(idx) = pDist;
-                    end;
-                else
-                    % Privilege larger distances
-                    if pDist > rating(i)
-                        rating(i) = pDist;
-                    end;
-                    if pDist > rating(idx)
-                        rating(idx) = pDist;
-                    end;
+          
+                % Check if distance is smaller than currently set distance
+                if pDist < rating(i)
+                    rating(i) = pDist;
+                end;
+                if pDist < rating(idx)
+                    rating(idx) = pDist;
                 end;
             end;
         end;
