@@ -338,7 +338,12 @@ if strcmp(svholder, 'cell')
         end;   
     else
         % Simple SV
-        rawSV = cell2mat(eval(['{hvs_data.cells.' svname '}']));
+        if isempty(eval('hvs_data.cells'))
+            rawSV = 0;
+        else
+            rawSVInCell = eval(['{hvs_data.cells.' svname '}']);
+            rawSV = cell2mat(rawSVInCell);
+        end;
     end;
 else
     % It's a particle supervariable
