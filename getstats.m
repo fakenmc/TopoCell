@@ -31,9 +31,10 @@
 %
 % stats - SV relative to particle, cell, subject or group, and respective
 % statistics.
+% table - The printed table in matrix format.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%
-function stats = getstats(hvs, tostat)
+function [stats, table] = getstats(hvs, tostat)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open files                                %
@@ -268,12 +269,19 @@ for i=1:numSVs
     );
 end;
 
+% Stats table in matrix format.
+table = zeros(numSVs, 6);
+
 fprintf('-----------------------------------------------------------------------------\n');
 fprintf('|  Id  |    n   |    Mean   |   Median  | St. dev.  | Variance  | St. err.  |\n');
         %|    1 |      2 | 5.715e+04 | 5.715e+04 | 2.415e+04 | 5.833e+08 | 4.344e+02
 fprintf('-----------------------------------------------------------------------------\n');
 for i=1:numSVs
-    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e | %1.3e |\n', i, stats{i}.numel, stats{i}.mean, stats{i}.median, stats{i}.std, stats{i}.var, stats{i}.stderr);
+    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e | %1.3e |\n', ...
+        i, stats{i}.numel, stats{i}.mean, stats{i}.median, ...
+        stats{i}.std, stats{i}.var, stats{i}.stderr);
+    table(i, :) = [stats{i}.numel stats{i}.mean stats{i}.median ...
+        stats{i}.std stats{i}.var stats{i}.stderr];
 end;
 fprintf('-----------------------------------------------------------------------------\n');
 
