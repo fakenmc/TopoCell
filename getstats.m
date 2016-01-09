@@ -260,6 +260,7 @@ for i=1:numSVs
     % Create stats data structure
     stats{i} = struct( ...
         'data', svVector, ...
+        'hvname', statDefs(i).hvname, ...
         'numel', numel(svVector), ...
         'mean', mean(svVector), ...
         'median', median(svVector), ...
@@ -272,18 +273,18 @@ end;
 % Stats table in matrix format.
 table = zeros(numSVs, 6);
 
-fprintf('-----------------------------------------------------------------------------\n');
-fprintf('|  Id  |    n   |    Mean   |   Median  | St. dev.  | Variance  | St. err.  |\n');
-        %|    1 |      2 | 5.715e+04 | 5.715e+04 | 2.415e+04 | 5.833e+08 | 4.344e+02
-fprintf('-----------------------------------------------------------------------------\n');
+fprintf('-----------------------------------------------------------------------------------------------------\n');
+fprintf('|  Id  |         HV name        |   n   |    Mean   |   Median  | St. dev.  | Variance  | St. err.  |\n');
+fprintf('-----------------------------------------------------------------------------------------------------\n');
 for i=1:numSVs
-    fprintf('| %4d | %6d | %1.3e | %1.3e | %1.3e | %1.3e | %1.3e |\n', ...
-        i, stats{i}.numel, stats{i}.mean, stats{i}.median, ...
-        stats{i}.std, stats{i}.var, stats{i}.stderr);
+    fprintf('| %4d | %22s |%6d | %9.3g | %9.3g | %9.3g | %9.3g | %9.3g |\n', ...
+        i, stats{i}.hvname, stats{i}.numel, stats{i}.mean, ...
+        stats{i}.median, stats{i}.std, stats{i}.var, ...
+        stats{i}.stderr);
     table(i, :) = [stats{i}.numel stats{i}.mean stats{i}.median ...
         stats{i}.std stats{i}.var stats{i}.stderr];
 end;
-fprintf('-----------------------------------------------------------------------------\n');
+fprintf('-----------------------------------------------------------------------------------------------------\n');
 
 function rawSV = getRawSV(svholder, svname, hvs_data)
 
@@ -363,6 +364,5 @@ else
     end;
     rawSV = cells;
 end;
-
 
 
